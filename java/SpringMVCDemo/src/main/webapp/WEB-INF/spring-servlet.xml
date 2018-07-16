@@ -18,8 +18,8 @@
     <mvc:annotation-driven />
 
     <!-- location是本地静态资源的路径，mapping是请求静态资源的URL，cache-period表示图片缓存一年 -->  
-   <!--  <mvc:resources location="/resources/image/" mapping="/image/**" cache-period="31536000"/>
-    <mvc:resources location="/resources/html/" mapping="/html/**"/> -->
+    <mvc:resources location="/resources/image/" mapping="/image/**" cache-period="31536000"/>
+    <mvc:resources location="/resources/html/" mapping="/html/**"/>
 
     <!-- 访问静态资源 -->
     <!-- 因为配置的spring是拦截所有请求 (/)，所以需要这个配置，来让静态资源通过（如js, css文件等） -->
