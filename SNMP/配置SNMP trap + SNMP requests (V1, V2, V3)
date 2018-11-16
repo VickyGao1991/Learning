@@ -1,0 +1,108 @@
+------------------------------------------SNMPv1/SNMPv2 trap 配置以及发送--------------------------------------------
+接收Trap端：
+1. /etc/snmp/snmptrapd.conf中，去掉行【authCommunity   log,execute,net public】前面的注释
+2. 用命令【snmptrapd -f -Lo】 监听并接收trap
+
+发送Trap端：
+1. 发送如下命令
+snmptrap -v 2c -c public {接收端IP} "" 1.3.6.1.4.1.111.115.1.1 SNMPv2-MIB::sysLocation.0 s "this is snmptrap message"
+
+
+------------------------------------------SNMPv3 trap 配置以及发送--------------------------------------------
+接收Trap端：
+1. 在 /var/lib/net-snmp/snmptrapd.conf（或者snmpapp.conf？或者没有） 中，用以下命令创建用户
+    createUser -e 0x8000000001020304 mytrapuser1 SHA "user1authpass" AES "user1encypass"
+    createUser -e 0x8000000001020305 mytrapuser2 SHA "user2authpass" AES "user2encypass"
+    createUser -e 0x8000000001020306 mytrapuser3 SHA "user3authpass" AES "user3encypass"
+    createUser -e 0x8000000001020307 mytrapuser4 SHA "user4authpass" AES "user4encypass"
+2. 在 /etc/snmp/snmptrapd.conf 中，用以下命令授权已经创建好的用户
+    authUser log,execute,net mytrapuser1 
+    authUser log,execute,net mytrapuser2 noauth
+    authUser log,execute,net mytrapuser3 auth
+    authUser log,execute,net mytrapuser4 priv
+3. 在 /etc/snmp/snmptrapd.conf中，去掉行 authCommunity   log,execute,net public】 前面的注释
+4. 用命令【snmptrapd -f -Dusm -Lo】 监听并接收trap【启动snmptrapd时，创建的trap用户才会被load】
+5. 用SNMP4J 发送trap 时候，默认Agent端的Engine Id 为 0x80001370017f000001
+
+发送Trap端：
+1. 发送命令:
+snmptrap -v 3 -a SHA -A user1authpass -x AES -X user1encypass -l authPriv -u mytrapuser1 -e 0x8000000001020304 10.86.2.193 40 coldStart.0
+snmptrap -v 3 -a SHA -A user1authpass -x AES -X user1encypass -l authNoPriv -u mytrapuser1 -e 0x8000000001020304 10.86.2.193 40 coldStart.0
+snmptrap -v 3 -a SHA -A user1authpass -l authNoPriv -u mytrapuser1 -e 0x8000000001020304 10.86.2.193 40 coldStart.0
+
+snmptrap -v 3 -a SHA -A user2authpass -x AES -X user2encypass -l authPriv -u mytrapuser2 -e 0x8000000001020305 10.86.2.193 40 coldStart.0
+snmptrap -v 3 -a SHA -A user2authpass -x AES -X user2authpass -l authNoPriv -u mytrapuser2 -e 0x8000000001020305 10.86.2.193 40 coldStart.0
+snmptrap -v 3 -l noAuthNoPriv -u mytrapuser2 -e 0x8000000001020305 10.86.2.193 40 coldStart.0
+snmptrap -v 3 -u mytrapuser2 -e 0x8000000001020305 10.86.2.193 40 coldStart.0
+
+
+snmptrap -v 3 -a SHA -A user3authpass -x AES -X user3encypass -l authPriv -u mytrapuser3 -e 0x8000000001020306 10.86.2.193 40 coldStart.0
+snmptrap -v 3 -a SHA -A user3authpass -x AES -X user3encypass -l authNoPriv -u mytrapuser3 -e 0x8000000001020306 10.86.2.193 40 coldStart.0
+snmptrap -v 3 -a SHA -A user3authpass -l authNoPriv -u mytrapuser3 -e 0x8000000001020306 10.86.2.193 40 coldStart.0
+
+snmptrap -v 3 -a SHA -A user4authpass -x AES -X user4encypass -l authPriv -u mytrapuser4 -e 0x8000000001020307 10.86.2.193 40 coldStart.0
+
+
+总结：
+1. security level: 配置文件中参数LEVEL 只有noauth, auth, priv，
+分别代表不认证不加密，认证不加密和认证并加密三种等级，且 noauth < auth < priv
+2. 详情可参考 http://net-snmp.sourceforge.net/wiki/index.php/TUT:Configuring_snmptrapd_to_receive_SNMPv3_notifications
+3. -e EngineID 用来确认发送trap 的agent是被授权的, 是agent 那边的提供的ID
+
+
+------------------------------------------SNMPv1, V2 Agent 配置 + NMS测试--------------------------------------------
+提供数据的Agent端：
+1. 打开/etc/snmp/snmpd.conf 注释掉下面几行
+com2sec notConfigUser  default       public
+group   notConfigGroup v1           notConfigUser
+group   notConfigGroup v2c           notConfigUser
+view    systemview    included   .1.3.6.1.2.1.1
+view    systemview    included   .1.3.6.1.2.1.25.1.1
+access  notConfigGroup ""      any       noauth    exact  systemview none none
+2. 重启 snmpd 服务
+
+监控并获取数据的NMS端：
+1. 发送命令：
+snmpget -v2c -c public {agent-IP} {OID}
+snmpwalk -v 1 -c public {agent-IP} {OID}
+snmpget -v 1 -c public {agent-IP} {OID}
+
+
+------------------------------------------SNMPv3 Agent 配置 + NMS测试--------------------------------------------
+提供数据及用户的Agent端：
+1. 停止snmpd 服务。systemctl stop snmpd.service
+2. 在 /var/lib/net-snmp/snmpd.conf 中，用以下命令创建用户
+    createUser mytrapuser1 SHA "user1authpass" AES "user1encypass"
+    createUser mytrapuser2 SHA "user2authpass" AES "user2encypass"
+    createUser mytrapuser3 SHA "user3authpass" AES "user3encypass"
+    createUser mytrapuser4 SHA "user4authpass" AES "user4encypass"
+3. 在 /etc/snmp/snmpd.conf 中，用以下命令授权已经创建好的用户
+    rouser mytrapuser1 
+    rouser mytrapuser2 noauth
+    rouser mytrapuser3 auth
+    rouser mytrapuser4 priv
+4. 重启snmpd服务。systemctl restart snmpd.service
+
+
+监控并获取数据的NMS端：
+1. 发送命令：
+snmpget -v 3 -u mytrapuser1 -l authPriv -a SHA -A user1authpass -x AES -X user1encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+snmpget -v 3 -u mytrapuser1 -l authNoPriv -a SHA -A user1authpass -x AES -X user1encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+
+snmpget -v 3 -u mytrapuser2 -l authPriv -a SHA -A user2authpass -x AES -X user2encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+snmpget -v 3 -u mytrapuser2 -l authNoPriv -a SHA -A user2authpass -x AES -X user2encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+snmpget -v 3 -u mytrapuser2 -l noAuthNoPriv -a SHA -A user2authpass -x AES -X user2encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+snmpget -v 3 -u mytrapuser2 -l noAuthNoPriv 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+snmpget -v 3 -u mytrapuser2 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+
+snmpget -v 3 -u mytrapuser3 -l authPriv -a SHA -A user3authpass -x AES -X user3encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+snmpget -v 3 -u mytrapuser3 -l authNoPriv -a SHA -A user3authpass -x AES -X user3encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+
+snmpget -v 3 -u mytrapuser4 -l authPriv -a SHA -A user4authpass -x AES -X user4encypass 127.0.0.1 1.3.6.1.4.1.2021.4.5.0
+
+
+总结：
+1. 开启SNMPv3时，建议关闭SNMPv1, SNMPv2
+2. 详情可参考 http://www.net-snmp.org/docs/man/snmpd.conf.html
+http://net-snmp.sourceforge.net/wiki/index.php/TUT:SNMPv3_Options
+
