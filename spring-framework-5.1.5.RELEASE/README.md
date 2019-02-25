@@ -1,5 +1,6 @@
 下载的spring5.1源码,已经在本地编译通过,并且为了方便debug本人在工程下创建了一个Module My-spring1
-编译以及构建Demo 的步骤参考: https://blog.csdn.net/Java_Vicky/article/details/87884859
+
+编译以及构建Demo 的步骤请参考本人的博客: https://blog.csdn.net/Java_Vicky/article/details/87884859
 
 主要是为了督促自己学习源码, 以后我会不断的更新解读源码的注释!!!
 
