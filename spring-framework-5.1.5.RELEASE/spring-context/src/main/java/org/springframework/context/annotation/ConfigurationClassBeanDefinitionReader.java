@@ -134,14 +134,19 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		// 如果一个class 是被import 的,,会被spring 标记, 并在这里完成注册
 		if (configClass.isImported()) {
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
+		// 处理config 类中定义bean的方法
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
 
+		// load from XML ?? 待求证 TODO:
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+
+		// 注册通过 registrar import的class
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
@@ -213,7 +218,7 @@ class ConfigurationClassBeanDefinitionReader {
 		beanDef.setSource(this.sourceExtractor.extractSource(metadata, configClass.getResource()));
 
 		if (metadata.isStatic()) {
-			// static @Bean method
+			// static @Bean method  如果是静态方法
 			beanDef.setBeanClassName(configClass.getMetadata().getClassName());
 			beanDef.setFactoryMethodName(methodName);
 		}

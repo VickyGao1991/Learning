@@ -258,7 +258,7 @@ public class AnnotatedBeanDefinitionReader {
 		 * 初始化AnnotationConfigApplicationContext时，父类构造方法初始化一个DefaultListableBeanFactory
 		 * DefaultListableBeanFactory 中有一个 beanDefinitionMap，
 		 *
-		 * egister（）就是把beanDefinition 信息放到 spring 的 DefaultListableBeanFactory 的 beanDefinitionMap 中
+		 * register（）就是把beanDefinition 信息放到 spring 的 DefaultListableBeanFactory 的 beanDefinitionMap 中
 		 * beanDefinitionMap 的key是bean name，value 是beanDefinition object
 		 * */
 

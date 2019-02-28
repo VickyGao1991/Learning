@@ -119,11 +119,26 @@ class ConfigurationClassEnhancer {
 	 */
 	private Enhancer newEnhancer(Class<?> configSuperClass, @Nullable ClassLoader classLoader) {
 		Enhancer enhancer = new Enhancer();
-		enhancer.setSuperclass(configSuperClass);
-		enhancer.setInterfaces(new Class<?>[] {EnhancedConfiguration.class});
-		enhancer.setUseFactory(false);
+		enhancer.setSuperclass(configSuperClass); // cglib 通过继承实现代理,所以把target对象设置为代理对象的父类
+		enhancer.setInterfaces(new Class<?>[] {EnhancedConfiguration.class});// 增强接口,
+		enhancer.setUseFactory(false); // ???
 		enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
+		/** BeanFactoryAwareGeneratorStrategy 是一个proxy生成策略
+		 * 主要为代理类中添加一个成员变量$$beanFactory
+		 *
+		 * 上面看到,我们让代理类实现了接口EnhancedConfiguration:BeanFactoryAware,
+		 * 所以代理类可重写方法setBeanFactory(),通过这个方法可以拿到beanFactory对象
+		 * 继而可以利用beanFactory.getBean("XXX") 拿到bean
+		*/
 		enhancer.setStrategy(new BeanFactoryAwareGeneratorStrategy(classLoader));
+
+		/**
+		 * 添加了3个callbacks 方法,
+		 * 为了解决configuration类中@Bean方法相互调用而重复实例化对象的问题
+		 * 现在逻辑是: 判断是第一次拿,就new,否则就从bean factory 拿
+		 *
+		 * TODO:
+		 * **/
 		enhancer.setCallbackFilter(CALLBACK_FILTER);
 		enhancer.setCallbackTypes(CALLBACK_FILTER.getCallbackTypes());
 		return enhancer;
@@ -310,6 +325,8 @@ class ConfigurationClassEnhancer {
 		 * existence of this bean object.
 		 * @throws Throwable as a catch-all for any exception that may be thrown when invoking the
 		 * super implementation of the proxied method i.e., the actual {@code @Bean} method
+		 *
+		 * @param  enhancedConfigInstance 代理对象
 		 */
 		@Override
 		@Nullable

@@ -95,7 +95,10 @@ final class PostProcessorRegistrationDelegate {
 			sortPostProcessors(currentRegistryProcessors, beanFactory);
 			// 合并list
 			registryProcessors.addAll(currentRegistryProcessors);
+
+			// 执行所有BeanFactoryPostProcessor子类的BeanDefinitionRegistryPostProcessors.postProcessBeanDefinitionRegistry()
 			invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+
 			currentRegistryProcessors.clear();
 
 			// Next, invoke the BeanDefinitionRegistryPostProcessors that implement Ordered.
@@ -112,6 +115,7 @@ final class PostProcessorRegistrationDelegate {
 			currentRegistryProcessors.clear();
 
 			// Finally, invoke all other BeanDefinitionRegistryPostProcessors until no further ones appear.
+			// 查看是否有漏掉没有执行的BeanDefinitionRegistryPostProcessors, 若有就执行它
 			boolean reiterate = true;
 			while (reiterate) {
 				reiterate = false;
@@ -130,6 +134,12 @@ final class PostProcessorRegistrationDelegate {
 			}
 
 			// Now, invoke the postProcessBeanFactory callback of all processors handled so far.
+			/**
+			 * 执行 BeanFactoryPostProcessor 的回调方法
+			 *
+			 * 前面执行的是子类的postProcessBeanDefinitionRegistry()
+			 * 现在先执行子类的postProcessBeanFactory(),再执行
+			 * */
 			invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
 		}

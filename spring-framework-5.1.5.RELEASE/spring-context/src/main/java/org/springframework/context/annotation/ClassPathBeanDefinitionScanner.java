@@ -272,11 +272,14 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 		Assert.notEmpty(basePackages, "At least one base package must be specified");
 		Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
 		for (String basePackage : basePackages) {
+			// 把 basePackage 下的java 文件扫描出来并封装成 BeanDefinition
 			Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
+			// 此时 candidates 只有basePackage 目录下带有@Compotent的bean
 			for (BeanDefinition candidate : candidates) {
 				ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(candidate);
 				candidate.setScope(scopeMetadata.getScopeName());
 				String beanName = this.beanNameGenerator.generateBeanName(candidate, this.registry);
+				// 扫描出来包装的bd 是ScannedGenericBeanDefinition: AbstractBeanDefinition
 				if (candidate instanceof AbstractBeanDefinition) {
 					postProcessBeanDefinition((AbstractBeanDefinition) candidate, beanName);
 				}

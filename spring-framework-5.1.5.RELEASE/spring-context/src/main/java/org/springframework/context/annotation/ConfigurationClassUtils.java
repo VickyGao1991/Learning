@@ -113,6 +113,8 @@ abstract class ConfigurationClassUtils {
 		}
 
 		// 先得到bd 对应bean的元数据(metadata),然后去判断这个bean有没有@Configuration 注解
+		// 如果存在,spring 把它标记为[全注解的类]
+		// 如果不存在,spring 把它标记为[部分注解类]
 		if (isFullConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}

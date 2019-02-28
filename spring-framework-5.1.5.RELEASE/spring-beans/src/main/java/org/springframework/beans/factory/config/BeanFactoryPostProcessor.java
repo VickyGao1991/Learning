@@ -46,6 +46,12 @@ import org.springframework.beans.BeansException;
 public interface BeanFactoryPostProcessor {
 
 	/**
+	 * bean factory 的后置处理器
+	 *
+	 * 被调用的时间点: 在bean factory 初始化之后,bean实例化之前
+	 * 使用场景: 在这个期间,我们可以动态的去修改bean factory中已初始化好的bean definition,
+	 *          从而达到干预bean 实例化的效果
+	 *
 	 * Modify the application context's internal bean factory after its standard
 	 * initialization. All bean definitions will have been loaded, but no beans
 	 * will have been instantiated yet. This allows for overriding or adding

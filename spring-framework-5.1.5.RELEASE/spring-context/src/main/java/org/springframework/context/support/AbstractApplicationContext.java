@@ -656,7 +656,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()));
 
 		// Configure the bean factory with context callbacks.
-		/** 添加一个bean后置处理器,在这个后置处理器中根据bean 实现的不同接口分别注入不同的对象
+		/** 添加一个bean后置处理器 ApplicationContextAwareProcessor,
+		 * 在这个后置处理器中根据bean 实现的不同接口分别注入不同的对象
 		 * 最后被放到 beanFactory 的 BeanPostProcessors list
 		 * bean 实例化之后执行bean后置处理器,所以现在先保存在bean factory中
 		 * */
@@ -713,7 +714,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>Must be called before singleton instantiation.
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
-		//注意getBeanFactoryPostProcessors() 只返回我们自己定义的BeanFactoryPostProcessor (没有交给spring管理的, 即没有加@Compotent)
+		// 注意getBeanFactoryPostProcessors() 只返回我们自己add的BeanFactoryPostProcessor
+		// 即:call acac2.addBeanFactoryPostProcessor(new TestBeanFactoryPostProcessor());
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime

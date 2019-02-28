@@ -82,6 +82,7 @@ class ComponentScanAnnotationParser {
 		scanner.setBeanNameGenerator(useInheritedGenerator ? this.beanNameGenerator :
 				BeanUtils.instantiateClass(generatorClass));
 
+		// TODO: 后面再分析
 		ScopedProxyMode scopedProxyMode = componentScan.getEnum("scopedProxy");
 		if (scopedProxyMode != ScopedProxyMode.DEFAULT) {
 			scanner.setScopedProxyMode(scopedProxyMode);
@@ -104,6 +105,7 @@ class ComponentScanAnnotationParser {
 			}
 		}
 
+		// 是否懒加载, 默认为false, 可以通过@Lazy 设置
 		boolean lazyInit = componentScan.getBoolean("lazyInit");
 		if (lazyInit) {
 			scanner.getBeanDefinitionDefaults().setLazyInit(true);
@@ -129,6 +131,8 @@ class ComponentScanAnnotationParser {
 				return declaringClass.equals(className);
 			}
 		});
+
+
 		// 重要! 解析扫描的基本信息,比如: 是否过滤,是否加入新的包
 		// basePackages 是 @ComponentScan("com.test") 的"com.test"
 		return scanner.doScan(StringUtils.toStringArray(basePackages));

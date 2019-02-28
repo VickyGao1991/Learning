@@ -70,8 +70,20 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
-		// 此处会先去调用父类的构造方法
-		// 初始化一个能读取加了注解的类的reader
+		/**
+		 * 1. 此处会先去调用父类的构造方法
+		 *
+		 * 2. 初始化一个reader, 能读取加了注解的类, 在它的构造方法内注册了5个bean, 分别是
+		 * ConfigurationClassPostProcessor
+		 * DefaultEventListenerFactory
+		 * EventListenerMethodProcessor
+		 * AutowiredAnnotationBeanPostProcessor
+		 * CommonAnnotationBeanPostProcessor
+		 *
+		 * 3. 初始化一个scanner, 可以去扫描指定包下的bean
+		 * 但是, spring 初始化过程注册的bean并不是通过这个scanner 扫描出来的,
+		 * 而是通过 ClassPathBeanDefinitionScanner 扫描出来的
+		 */
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
